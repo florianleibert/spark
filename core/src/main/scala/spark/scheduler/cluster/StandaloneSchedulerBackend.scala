@@ -10,6 +10,10 @@ import spark.{SparkException, Logging, TaskState}
 import akka.dispatch.Await
 import java.util.concurrent.atomic.AtomicInteger
 import akka.remote.{RemoteClientShutdown, RemoteClientDisconnected, RemoteClientLifeCycleEvent}
+import java.net.URI
+import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.conf.Configuration
+import java.io.{FileOutputStream, OutputStreamWriter}
 
 /**
  * A standalone scheduler backend, which waits for standalone executors to connect to it through
@@ -34,6 +38,14 @@ class StandaloneSchedulerBackend(scheduler: ClusterScheduler, actorSystem: Actor
     override def preStart() {
       // Listen for remote client disconnection events, since they don't go through Akka's watch()
       context.system.eventStream.subscribe(self, classOf[RemoteClientLifeCycleEvent])
+
+      // Update the driver file to point to us
+      val driverFile = System.getProperty("spark.driver.file", "/tmp/spark-master")
+      //val fs = FileSystem.get(driverFile, new Configuration())
+      val out = new OutputStreamWriter(new FileOutputStream(driverFile))
+      out.write("akka://spark@%s:%s/user/StandaloneScheduler\n".format(
+        System.getProperty("spark.driver.host"), System.getProperty("spark.driver.port")))
+      out.close()
     }
 
     def receive = {

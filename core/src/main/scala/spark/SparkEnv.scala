@@ -9,6 +9,7 @@ import spark.storage.BlockManager
 import spark.storage.BlockManagerMaster
 import spark.network.ConnectionManager
 import spark.util.AkkaUtils
+import java.net.URI
 
 /**
  * Holds all the runtime environment objects for a running Spark instance (either master or worker),
@@ -43,6 +44,22 @@ class SparkEnv (
     // Unfortunately Akka's awaitTermination doesn't actually wait for the Netty server to shut
     // down, but let's call it anyway in case it gets fixed in a later release
     actorSystem.awaitTermination()
+  }
+
+  def driverChanged(newDriverUrl: String) {
+    val uri = new URI(newDriverUrl)
+    val newHost = uri.getHost
+    val newPort = uri.getPort
+    System.setProperty("spark.driver.host", newHost)
+    System.setProperty("spark.driver.port", newPort.toString)
+
+    // Tell our local proxies about the new actor
+    mapOutputTracker.trackerActor = actorSystem.actorFor(
+      "akka://spark@%s:%s/user/MapOutputTracker".format(newHost, newPort))
+
+    blockManager.master.driverActor = actorSystem.actorFor(
+      "akka://spark@%s:%s/user/BlockManagerMaster".format(newHost, newPort))
+    blockManager.reregister()
   }
 }
 
@@ -153,5 +170,4 @@ object SparkEnv extends Logging {
       httpFileServer,
       sparkFilesDir)
   }
-  
 }

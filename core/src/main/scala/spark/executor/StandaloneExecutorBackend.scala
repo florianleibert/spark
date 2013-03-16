@@ -1,7 +1,7 @@
 package spark.executor
 
 import java.nio.ByteBuffer
-import spark.Logging
+import spark.{DriverChangeListener, DriverFinder, Logging}
 import spark.TaskState.TaskState
 import spark.util.AkkaUtils
 import akka.actor.{ActorRef, Actor, Props, Terminated}
@@ -24,19 +24,37 @@ private[spark] class StandaloneExecutorBackend(
   with Logging {
 
   var driver: ActorRef = null
+  var registered = false
+  var currentDriverUrl: String = _
 
-  override def preStart() {
+  def register(driverUrl: String) {
     logInfo("Connecting to driver: " + driverUrl)
+    currentDriverUrl = driverUrl
     driver = context.actorFor(driverUrl)
     driver ! RegisterExecutor(executorId, hostname, cores)
     context.system.eventStream.subscribe(self, classOf[RemoteClientLifeCycleEvent])
     context.watch(driver) // Doesn't work with remote actors, but useful for testing
   }
 
+  override def preStart() {
+    register(driverUrl)
+    val masterFinder = new DriverFinder(driverUrl)
+    masterFinder.addListener(new DriverChangeListener {
+      def onMasterChanged(newDriverUrl: String) {
+        register(newDriverUrl)
+      }
+    })
+  }
+
   override def receive = {
     case RegisteredExecutor(sparkProperties) =>
       logInfo("Successfully registered with driver")
-      executor.initialize(executorId, hostname, sparkProperties)
+      if (!registered) {
+        executor.initialize(executorId, hostname, sparkProperties)
+        registered = true
+      } else {
+        executor.driverChanged(currentDriverUrl)
+      }
 
     case RegisterExecutorFailed(message) =>
       logError("Slave registration failed: " + message)
@@ -46,9 +64,14 @@ private[spark] class StandaloneExecutorBackend(
       logInfo("Got assigned task " + taskDesc.taskId)
       executor.launchTask(this, taskDesc.taskId, taskDesc.serializedTask)
 
-    case Terminated(_) | RemoteClientDisconnected(_, _) | RemoteClientShutdown(_, _) =>
-      logError("Driver terminated or disconnected! Shutting down.")
-      System.exit(1)
+    case Terminated(x) =>
+      logError("Driver terminated: " + x)
+
+    case RemoteClientDisconnected(x, y) =>
+      logError("Driver disconnected: " + x + " " + y)
+
+    case RemoteClientShutdown(x, y) =>
+      logError("Driver shutdown: " + x + " " + y)
   }
 
   override def statusUpdate(taskId: Long, state: TaskState, data: ByteBuffer) {

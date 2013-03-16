@@ -47,13 +47,12 @@ class BlockManagerUI(val actorSystem: ActorSystem, blockManagerMaster: ActorRef,
           // Request the current storage status from the Master
           val storageStatusList = sc.getExecutorStorageStatus
           // Calculate macro-level statistics
-          val maxMem = storageStatusList.map(_.maxMem).reduce(_+_)
-          val remainingMem = storageStatusList.map(_.memRemaining).reduce(_+_)
-          val diskSpaceUsed = storageStatusList.flatMap(_.blocks.values.map(_.diskSize))
-            .reduceOption(_+_).getOrElse(0L)
+          val maxMem = storageStatusList.map(_.maxMem).fold(0L)(_+_)
+          val remainingMem = storageStatusList.map(_.memRemaining).fold(0L)(_+_)
+          val diskUsed = storageStatusList.flatMap(_.blocks.values.map(_.diskSize)).fold(0L)(_+_)
           val rdds = StorageUtils.rddInfoFromStorageStatus(storageStatusList, sc)
           spark.storage.html.index.
-            render(maxMem, remainingMem, diskSpaceUsed, rdds, storageStatusList)
+            render(maxMem, remainingMem, diskUsed, rdds, storageStatusList)
         }
       } ~
       path("rdd") {

@@ -137,11 +137,11 @@ class BlockManager(
   private def initialize() {
     master.registerBlockManager(blockManagerId, maxMemory, slaveActor)
     BlockManagerWorker.startBlockManagerWorker(this)
-    if (!BlockManager.getDisableHeartBeatsForTesting) {
-      heartBeatTask = actorSystem.scheduler.schedule(0.seconds, heartBeatFrequency.milliseconds) {
-        heartBeat()
-      }
-    }
+    //if (!BlockManager.getDisableHeartBeatsForTesting) {
+    //  heartBeatTask = actorSystem.scheduler.schedule(0.seconds, heartBeatFrequency.milliseconds) {
+    //    heartBeat()
+    //  }
+    //}
   }
 
   /**
@@ -166,7 +166,7 @@ class BlockManager(
 
   /**
    * Reregister with the master and report all blocks to it. This will be called by the heart beat
-   * thread if our heartbeat to the block amnager indicates that we were not registered.
+   * thread if our heartbeat to the block manager indicates that we were not registered.
    *
    * Note that this method must be called without any BlockInfo locks held.
    */

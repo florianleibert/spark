@@ -81,12 +81,12 @@ class BlockManagerMasterActor(val isLocal: Boolean) extends Actor with Logging {
       logInfo("Stopping BlockManagerMaster")
       sender ! true
       if (timeoutCheckingTask != null) {
-        timeoutCheckingTask.cancel
+        timeoutCheckingTask.cancel()
       }
       context.stop(self)
 
     case ExpireDeadHosts =>
-      expireDeadHosts()
+      //expireDeadHosts()
 
     case HeartBeat(blockManagerId) =>
       heartBeat(blockManagerId)

@@ -88,6 +88,8 @@ private[spark] class Master(ip: String, port: Int, webUiPort: Int) extends Actor
       schedule()
     }
 
+    // TODO: ReregisterApplication
+
     case ExecutorStateChanged(appId, execId, state, message, exitStatus) => {
       val execOption = idToApp.get(appId).flatMap(app => app.executors.get(execId))
       execOption match {
@@ -129,19 +131,19 @@ private[spark] class Master(ip: String, port: Int, webUiPort: Int) extends Actor
       // The disconnected actor could've been either a worker or an app; remove whichever of
       // those we have an entry for in the corresponding actor hashmap
       actorToWorker.get(actor).foreach(removeWorker)
-      actorToApp.get(actor).foreach(finishApplication)
+      //actorToApp.get(actor).foreach(finishApplication) // MATEI: left out for master FT
     }
 
     case RemoteClientDisconnected(transport, address) => {
       // The disconnected client could've been either a worker or an app; remove whichever it was
       addressToWorker.get(address).foreach(removeWorker)
-      addressToApp.get(address).foreach(finishApplication)
+      //addressToApp.get(address).foreach(finishApplication) // MATEI: left out for master FT
     }
 
     case RemoteClientShutdown(transport, address) => {
       // The disconnected client could've been either a worker or an app; remove whichever it was
       addressToWorker.get(address).foreach(removeWorker)
-      addressToApp.get(address).foreach(finishApplication)
+      //addressToApp.get(address).foreach(finishApplication) // MATEI: left out for master FT
     }
 
     case RequestMasterState => {

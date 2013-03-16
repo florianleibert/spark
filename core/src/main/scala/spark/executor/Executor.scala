@@ -77,6 +77,10 @@ private[spark] class Executor extends Logging {
       1, 128, 600, TimeUnit.SECONDS, new SynchronousQueue[Runnable])
   }
 
+  def driverChanged(newDriverUrl: String) {
+    env.driverChanged(newDriverUrl)
+  }
+
   def launchTask(context: ExecutorBackend, taskId: Long, serializedTask: ByteBuffer) {
     threadPool.execute(new TaskRunner(context, taskId, serializedTask))
   }
