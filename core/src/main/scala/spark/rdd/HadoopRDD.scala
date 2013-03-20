@@ -21,7 +21,7 @@ import spark.{Dependency, Logging, Partition, RDD, SerializableWritable, SparkCo
 /**
  * A Spark split class that wraps around a Hadoop InputSplit.
  */
-private[spark] class HadoopPartition(rddId: Int, idx: Int, @transient s: InputSplit)
+private[spark] class HadoopPartition(rddId: Long, idx: Int, @transient s: InputSplit)
   extends Partition {
   
   val inputSplit = new SerializableWritable[InputSplit](s)

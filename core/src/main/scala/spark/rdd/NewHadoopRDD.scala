@@ -11,12 +11,12 @@ import spark.{Dependency, Logging, Partition, RDD, SerializableWritable, SparkCo
 
 
 private[spark]
-class NewHadoopPartition(rddId: Int, val index: Int, @transient rawSplit: InputSplit with Writable)
+class NewHadoopPartition(rddId: Long, val index: Int, @transient rawSplit: InputSplit with Writable)
   extends Partition {
 
   val serializableHadoopSplit = new SerializableWritable(rawSplit)
 
-  override def hashCode(): Int = (41 * (41 + rddId) + index)
+  override def hashCode(): Int = (41 * (41 + rddId) + index).toInt
 }
 
 class NewHadoopRDD[K, V](
@@ -38,7 +38,7 @@ class NewHadoopRDD[K, V](
     formatter.format(new Date())
   }
 
-  @transient private val jobId = new JobID(jobtrackerId, id)
+  @transient private val jobId = new JobID(jobtrackerId, id.toInt)
 
   override def getPartitions: Array[Partition] = {
     val inputFormat = inputFormatClass.newInstance
@@ -54,7 +54,7 @@ class NewHadoopRDD[K, V](
   override def compute(theSplit: Partition, context: TaskContext) = new Iterator[(K, V)] {
     val split = theSplit.asInstanceOf[NewHadoopPartition]
     val conf = confBroadcast.value.value
-    val attemptId = new TaskAttemptID(jobtrackerId, id, true, split.index, 0)
+    val attemptId = new TaskAttemptID(jobtrackerId, id.toInt, true, split.index, 0)
     val hadoopAttemptContext = newTaskAttemptContext(conf, attemptId)
     val format = inputFormatClass.newInstance
     val reader = format.createRecordReader(

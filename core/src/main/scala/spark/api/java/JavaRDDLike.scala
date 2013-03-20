@@ -26,7 +26,7 @@ trait JavaRDDLike[T, This <: JavaRDDLike[T, This]] extends Serializable {
   def context: SparkContext = rdd.context
 
   /** A unique ID for this RDD (within its SparkContext). */
-  def id: Int = rdd.id
+  def id: Long = rdd.id
 
   /** Get the RDD's current storage level, or StorageLevel.NONE if none is set. */
   def getStorageLevel: StorageLevel = rdd.getStorageLevel

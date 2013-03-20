@@ -21,7 +21,7 @@ case class StorageStatus(blockManagerId: BlockManagerId, maxMem: Long,
 
 }
 
-case class RDDInfo(id: Int, name: String, storageLevel: StorageLevel,
+case class RDDInfo(id: Long, name: String, storageLevel: StorageLevel,
   numCachedPartitions: Int, numPartitions: Int, memSize: Long, diskSize: Long) {
   override def toString = {
     import Utils.memoryBytesToString
@@ -57,7 +57,7 @@ object StorageUtils {
       val diskSize = rddBlocks.map(_.diskSize).reduce(_ + _)
 
       // Find the id of the RDD, e.g. rdd_1 => 1
-      val rddId = rddKey.split("_").last.toInt
+      val rddId = rddKey.split("_").last.toLong
       // Get the friendly name for the rdd, if available.
       val rdd = sc.persistentRdds(rddId)
       val rddName = Option(rdd.name).getOrElse(rddKey)

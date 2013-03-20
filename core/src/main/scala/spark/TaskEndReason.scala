@@ -15,7 +15,7 @@ private[spark]
 case object Resubmitted extends TaskEndReason // Task was finished earlier but we've now lost it
 
 private[spark] 
-case class FetchFailed(bmAddress: BlockManagerId, shuffleId: Int, mapId: Int, reduceId: Int) extends TaskEndReason
+case class FetchFailed(bmAddress: BlockManagerId, shuffleId: Long, mapId: Int, reduceId: Int) extends TaskEndReason
 
 private[spark] case class ExceptionFailure(exception: Throwable) extends TaskEndReason
 

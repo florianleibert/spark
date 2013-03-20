@@ -72,13 +72,13 @@ class DAGScheduler(
 
   val idToStage = new TimeStampedHashMap[Int, Stage]
 
-  val shuffleToMapStage = new TimeStampedHashMap[Int, Stage]
+  val shuffleToMapStage = new TimeStampedHashMap[Long, Stage]
 
   private[spark] val stageToInfos = new TimeStampedHashMap[Stage, StageInfo]
 
   private[spark] val sparkListeners = ArrayBuffer[SparkListener]()
 
-  var cacheLocs = new HashMap[Int, Array[List[String]]]
+  var cacheLocs = new HashMap[Long, Array[List[String]]]
 
   // For tracking failed nodes, we use the MapOutputTracker's generation number, which is
   // sent with every task. When we detect a node failing, we note the current generation number

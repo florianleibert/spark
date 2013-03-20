@@ -1,7 +1,7 @@
 package spark
 
 import java.io._
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.{AtomicLong, AtomicInteger}
 import java.net.URI
 
 import scala.collection.Map
@@ -94,7 +94,7 @@ class SparkContext(
   private[spark] val addedJars = HashMap[String, Long]()
 
   // Keeps track of all persisted RDDs
-  private[spark] val persistentRdds = new TimeStampedHashMap[Int, RDD[_]]()
+  private[spark] val persistentRdds = new TimeStampedHashMap[Long, RDD[_]]()
   private[spark] val metadataCleaner = new MetadataCleaner("SparkContext", this.cleanup)
 
 
@@ -702,14 +702,14 @@ class SparkContext(
   /** Default min number of partitions for Hadoop RDDs when not given by user */
   def defaultMinSplits: Int = math.min(defaultParallelism, 2)
 
-  private var nextShuffleId = new AtomicInteger(0)
+  private var nextShuffleId = new AtomicLong(0L)
 
-  private[spark] def newShuffleId(): Int = nextShuffleId.getAndIncrement()
+  private[spark] def newShuffleId(): Long = nextShuffleId.getAndIncrement()
 
-  private var nextRddId = new AtomicInteger(0)
+  private var nextRddId = new AtomicLong(0L)
 
   /** Register a new RDD, returning its RDD ID */
-  private[spark] def newRddId(): Int = nextRddId.getAndIncrement()
+  private[spark] def newRddId(): Long = nextRddId.getAndIncrement()
 
   /** Called by MetadataCleaner to clean up the persistentRdds map periodically */
   private[spark] def cleanup(cleanupTime: Long) {

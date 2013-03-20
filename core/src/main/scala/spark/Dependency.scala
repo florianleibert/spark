@@ -31,7 +31,7 @@ class ShuffleDependency[K, V](
     val partitioner: Partitioner)
   extends Dependency(rdd) {
 
-  val shuffleId: Int = rdd.context.newShuffleId()
+  val shuffleId: Long = rdd.context.newShuffleId()
 }
 
 

@@ -21,13 +21,13 @@ import spark.util.{MetadataCleaner, TimeStampedHashMap}
 
 
 private[spark] sealed trait MapOutputTrackerMessage
-private[spark] case class GetMapOutputStatuses(shuffleId: Int, requester: String)
+private[spark] case class GetMapOutputStatuses(shuffleId: Long, requester: String)
   extends MapOutputTrackerMessage
 private[spark] case object StopMapOutputTracker extends MapOutputTrackerMessage
 
 private[spark] class MapOutputTrackerActor(tracker: MapOutputTracker) extends Actor with Logging {
   def receive = {
-    case GetMapOutputStatuses(shuffleId: Int, requester: String) =>
+    case GetMapOutputStatuses(shuffleId, requester) =>
       logInfo("Asked to send map output locations for shuffle " + shuffleId + " to " + requester)
       sender ! tracker.getSerializedLocations(shuffleId)
 
@@ -43,7 +43,7 @@ private[spark] class MapOutputTracker extends Logging {
   // Set to the MapOutputTrackerActor living on the driver
   var trackerActor: ActorRef = _
 
-  var mapStatuses = new TimeStampedHashMap[Int, Array[MapStatus]]
+  var mapStatuses = new TimeStampedHashMap[Long, Array[MapStatus]]
 
   // Incremented every time a fetch fails so that client nodes know to clear
   // their cache of map output locations if this happens.
@@ -52,7 +52,7 @@ private[spark] class MapOutputTracker extends Logging {
 
   // Cache a serialized version of the output statuses for each shuffle to send them out faster
   var cacheGeneration = generation
-  val cachedSerializedStatuses = new TimeStampedHashMap[Int, Array[Byte]]
+  val cachedSerializedStatuses = new TimeStampedHashMap[Long, Array[Byte]]
 
   val metadataCleaner = new MetadataCleaner("MapOutputTracker", this.cleanup)
 
@@ -76,14 +76,14 @@ private[spark] class MapOutputTracker extends Logging {
     }
   }
 
-  def registerShuffle(shuffleId: Int, numMaps: Int) {
+  def registerShuffle(shuffleId: Long, numMaps: Int) {
     if (mapStatuses.get(shuffleId) != None) {
       throw new IllegalArgumentException("Shuffle ID " + shuffleId + " registered twice")
     }
     mapStatuses.put(shuffleId, new Array[MapStatus](numMaps))
   }
 
-  def registerMapOutput(shuffleId: Int, mapId: Int, status: MapStatus) {
+  def registerMapOutput(shuffleId: Long, mapId: Int, status: MapStatus) {
     var array = mapStatuses(shuffleId)
     array.synchronized {
       array(mapId) = status
@@ -91,7 +91,7 @@ private[spark] class MapOutputTracker extends Logging {
   }
 
   def registerMapOutputs(
-      shuffleId: Int,
+      shuffleId: Long,
       statuses: Array[MapStatus],
       changeGeneration: Boolean = false) {
     mapStatuses.put(shuffleId, Array[MapStatus]() ++ statuses)
@@ -100,7 +100,7 @@ private[spark] class MapOutputTracker extends Logging {
     }
   }
 
-  def unregisterMapOutput(shuffleId: Int, mapId: Int, bmAddress: BlockManagerId) {
+  def unregisterMapOutput(shuffleId: Long, mapId: Int, bmAddress: BlockManagerId) {
     var array = mapStatuses(shuffleId)
     if (array != null) {
       array.synchronized {
@@ -115,10 +115,10 @@ private[spark] class MapOutputTracker extends Logging {
   }
 
   // Remembers which map output locations are currently being fetched on a worker
-  val fetching = new HashSet[Int]
+  val fetching = new HashSet[Long]
 
   // Called on possibly remote nodes to get the server URIs and output sizes for a given shuffle
-  def getServerStatuses(shuffleId: Int, reduceId: Int): Array[(BlockManagerId, Long)] = {
+  def getServerStatuses(shuffleId: Long, reduceId: Int): Array[(BlockManagerId, Long)] = {
     val statuses = mapStatuses.get(shuffleId).orNull
     if (statuses == null) {
       logInfo("Don't have map outputs for shuffle " + shuffleId + ", fetching them")
@@ -194,13 +194,13 @@ private[spark] class MapOutputTracker extends Logging {
     generationLock.synchronized {
       if (newGen > generation) {
         logInfo("Updating generation to " + newGen + " and clearing cache")
-        mapStatuses = new TimeStampedHashMap[Int, Array[MapStatus]]
+        mapStatuses = new TimeStampedHashMap[Long, Array[MapStatus]]
         generation = newGen
       }
     }
   }
 
-  def getSerializedLocations(shuffleId: Int): Array[Byte] = {
+  def getSerializedLocations(shuffleId: Long): Array[Byte] = {
     var statuses: Array[MapStatus] = null
     var generationGotten: Long = -1
     generationLock.synchronized {
@@ -254,7 +254,7 @@ private[spark] object MapOutputTracker {
   // any of the statuses is null (indicating a missing location due to a failed mapper),
   // throw a FetchFailedException.
   def convertMapStatuses(
-        shuffleId: Int,
+        shuffleId: Long,
         reduceId: Int,
         statuses: Array[MapStatus]): Array[(BlockManagerId, Long)] = {
     if (statuses == null) {

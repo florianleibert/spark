@@ -58,14 +58,14 @@ class DAGSchedulerSuite extends FunSuite with BeforeAndAfter with LocalSparkCont
    * Keys are (rdd ID, partition ID). Anything not present will return an empty
    * list of cache locations silently.
    */
-  val cacheLocations = new HashMap[(Int, Int), Seq[BlockManagerId]]
+  val cacheLocations = new HashMap[(Long, Int), Seq[BlockManagerId]]
   // stub out BlockManagerMaster.getLocations to use our cacheLocations
   val blockManagerMaster = new BlockManagerMaster(null) {
       override def getLocations(blockIds: Array[String]): Seq[Seq[BlockManagerId]] = {
         blockIds.map { name =>
           val pieces = name.split("_")
           if (pieces(0) == "rdd") {
-            val key = pieces(1).toInt -> pieces(2).toInt
+            val key = pieces(1).toLong -> pieces(2).toInt
             cacheLocations.getOrElse(key, Seq())
           } else {
             Seq()

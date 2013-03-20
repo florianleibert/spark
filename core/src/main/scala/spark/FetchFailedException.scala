@@ -4,7 +4,7 @@ import spark.storage.BlockManagerId
 
 private[spark] class FetchFailedException(
     val bmAddress: BlockManagerId,
-    val shuffleId: Int,
+    val shuffleId: Long,
     val mapId: Int,
     val reduceId: Int,
     cause: Throwable)

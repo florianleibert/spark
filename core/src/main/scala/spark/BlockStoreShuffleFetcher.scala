@@ -8,7 +8,7 @@ import spark.storage.{DelegateBlockFetchTracker, BlockManagerId}
 import util.{CompletionIterator, TimedIterator}
 
 private[spark] class BlockStoreShuffleFetcher extends ShuffleFetcher with Logging {
-  override def fetch[K, V](shuffleId: Int, reduceId: Int, metrics: TaskMetrics) = {
+  override def fetch[K, V](shuffleId: Long, reduceId: Int, metrics: TaskMetrics) = {
     logDebug("Fetching outputs for shuffle %d, reduce %d".format(shuffleId, reduceId))
     val blockManager = SparkEnv.get.blockManager
 
