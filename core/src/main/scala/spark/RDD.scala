@@ -105,6 +105,12 @@ abstract class RDD[T: ClassManifest](
   /** A unique ID for this RDD (within its SparkContext). */
   val id = sc.newRddId()
 
+  /**
+   * The ID to use for caching, as a slight hack to allow binding a new RDD upon master
+   * recovery to the cached version of an old one
+   */
+  var cacheId = id
+
   /** A friendly name for this RDD */
   var name: String = null
 

@@ -110,13 +110,13 @@ class DAGScheduler(
   }
 
   private def getCacheLocs(rdd: RDD[_]): Array[List[String]] = {
-    if (!cacheLocs.contains(rdd.id)) {
-      val blockIds = rdd.partitions.indices.map(index=> "rdd_%d_%d".format(rdd.id, index)).toArray
-      cacheLocs(rdd.id) = blockManagerMaster.getLocations(blockIds).map {
+    if (!cacheLocs.contains(rdd.cacheId)) {
+      val blockIds = rdd.partitions.indices.map(index=> "rdd_%d_%d".format(rdd.cacheId, index)).toArray
+      cacheLocs(rdd.cacheId) = blockManagerMaster.getLocations(blockIds).map {
         locations => locations.map(_.ip).toList
       }.toArray
     }
-    cacheLocs(rdd.id)
+    cacheLocs(rdd.cacheId)
   }
 
   private def clearCacheLocs() {

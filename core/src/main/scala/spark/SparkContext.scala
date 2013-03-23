@@ -702,14 +702,16 @@ class SparkContext(
   /** Default min number of partitions for Hadoop RDDs when not given by user */
   def defaultMinSplits: Int = math.min(defaultParallelism, 2)
 
-  private var nextShuffleId = new AtomicLong(0L)
+  private val startId = ((System.currentTimeMillis % 1000000) / 1000) * 1000
 
-  private[spark] def newShuffleId(): Long = nextShuffleId.getAndIncrement()
+  private var nextShuffleId = new AtomicLong(startId)
 
-  private var nextRddId = new AtomicLong(0L)
+  private var nextRddId = new AtomicLong(startId)
 
   /** Register a new RDD, returning its RDD ID */
   private[spark] def newRddId(): Long = nextRddId.getAndIncrement()
+
+  private[spark] def newShuffleId(): Long = nextShuffleId.getAndIncrement()
 
   /** Called by MetadataCleaner to clean up the persistentRdds map periodically */
   private[spark] def cleanup(cleanupTime: Long) {
