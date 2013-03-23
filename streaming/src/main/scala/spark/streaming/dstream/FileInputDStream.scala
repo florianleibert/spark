@@ -165,6 +165,10 @@ class FileInputDStream[K: ClassManifest, V: ClassManifest, F <: NewInputFormat[K
           generatedRDDs += ((t, filesToRDD(f)))
         }
       }
+      // NOTE: For FileInputDStream, we don't worry about restoring cacheIDs because we might
+      // map a file to a different time interval if we're unlucky in terms of clock differences
+      // w.r.t. HDFS; we need to fix this by committing which files were part of each batch to
+      // stable storage.
     }
 
     override def toString() = {

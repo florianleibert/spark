@@ -73,6 +73,7 @@ class CheckpointWriter(checkpointDir: String) extends Logging {
   }
 
   def write(checkpoint: Checkpoint) {
+    logInfo("Asked to write checkpoint")
     val bos = new ByteArrayOutputStream()
     val zos = new LZFOutputStream(bos)
     val oos = new ObjectOutputStream(zos)

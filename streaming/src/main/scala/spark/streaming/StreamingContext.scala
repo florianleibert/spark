@@ -147,13 +147,14 @@ class StreamingContext private (
    * fault-tolerance. The graph will be checkpointed every batch interval.
    * @param directory HDFS-compatible directory where the checkpoint data will be reliably stored
    */
-  def checkpoint(directory: String) {
+  def checkpoint(directory: String): StreamingContext = {
     if (directory != null) {
       sc.setCheckpointDir(StreamingContext.getSparkCheckpointDir(directory))
       checkpointDir = directory
     } else {
       checkpointDir = null
     }
+    this
   }
 
   protected[streaming] def initialCheckpoint: Checkpoint = {
@@ -408,6 +409,12 @@ class StreamingContext private (
     val inputStream = new QueueInputDStream(this, queue, oneAtATime, defaultRDD)
     registerInputStream(inputStream)
     inputStream
+  }
+
+  def constantStream[T: ClassManifest](data: Seq[T]): DStream[T] = {
+    val stream = new ConstantSeqInputDStream(this, data)
+    registerInputStream(stream)
+    stream
   }
 
   /**

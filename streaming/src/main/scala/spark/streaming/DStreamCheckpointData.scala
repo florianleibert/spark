@@ -13,6 +13,8 @@ class DStreamCheckpointData[T: ClassManifest] (dstream: DStream[T])
   extends Serializable with Logging {
   protected val data = new HashMap[Time, AnyRef]()
 
+  protected val cacheIds = new HashMap[Time, Long]()
+
   @transient private var fileSystem : FileSystem = null
   @transient private var lastCheckpointFiles: HashMap[Time, String] = null
 
@@ -42,6 +44,11 @@ class DStreamCheckpointData[T: ClassManifest] (dstream: DStream[T])
     newCheckpointFiles.foreach {
       case (time, data) => { logInfo("Added checkpointed RDD for time " + time + " to stream checkpoint") }
     }
+
+    for ((time, rdd) <- dstream.generatedRDDs if (!cacheIds.contains(time))) {
+      cacheIds(time) = rdd.cacheId
+      logInfo("Added cache ID " + rdd.cacheId + " for " + dstream + " at time " + time)
+    }
   }
 
   /**
@@ -69,6 +76,8 @@ class DStreamCheckpointData[T: ClassManifest] (dstream: DStream[T])
         }
       }
     }
+
+    // TODO: Clean up cacheIds
   }
 
   /**
@@ -83,6 +92,11 @@ class DStreamCheckpointData[T: ClassManifest] (dstream: DStream[T])
         logInfo("Restoring checkpointed RDD for time " + time + " from file '" + file + "'")
         dstream.generatedRDDs += ((time, dstream.context.sparkContext.checkpointFile[T](file)))
       }
+    }
+    // Set cache IDs for all the RDDs that we remember
+    dstream.cacheIds ++= cacheIds
+    for ((time, cacheId) <- cacheIds; rdd <- dstream.generatedRDDs.get(time)) {
+      rdd.cacheId = cacheId
     }
   }
 

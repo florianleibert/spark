@@ -702,7 +702,7 @@ class SparkContext(
   /** Default min number of partitions for Hadoop RDDs when not given by user */
   def defaultMinSplits: Int = math.min(defaultParallelism, 2)
 
-  private val startId = ((System.currentTimeMillis % 1000000) / 1000) * 1000
+  private val startId = ((System.currentTimeMillis % 1000000) / 1000) * 100000
 
   private var nextShuffleId = new AtomicLong(startId)
 

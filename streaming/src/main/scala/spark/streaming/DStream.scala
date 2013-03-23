@@ -59,8 +59,12 @@ abstract class DStream[T: ClassManifest] (
 
   // RDDs generated, marked as protected[streaming] so that testsuites can access it
   @transient
-  protected[streaming] var generatedRDDs = new HashMap[Time, RDD[T]] ()
-  
+  protected[streaming] var generatedRDDs = new HashMap[Time, RDD[T]]()
+
+  // Cache IDs for RDDs we have generated, to alow reuse across master failure
+  @transient
+  protected[streaming] var cacheIds = new HashMap[Time, Long]()
+
   // Time zero for the DStream
   protected[streaming] var zeroTime: Time = null
 
@@ -268,6 +272,13 @@ abstract class DStream[T: ClassManifest] (
         if (isTimeValid(time)) {
           compute(time) match {
             case Some(newRDD) =>
+              // Remember the RDD's cache ID, or set it to an old one if we're recovering after
+              // a failure and there is already a cacheID for it from the previous run
+              if (cacheIds.contains(time)) {
+                newRDD.cacheId = cacheIds(time)
+              } else {
+                cacheIds(time) = newRDD.cacheId
+              }
               if (storageLevel != StorageLevel.NONE) {
                 newRDD.persist(storageLevel)
                 logInfo("Persisting RDD " + newRDD.id + " for time " + time + " to " + storageLevel + " at time " + time)
@@ -386,7 +397,8 @@ abstract class DStream[T: ClassManifest] (
   private def readObject(ois: ObjectInputStream) {
     logDebug(this.getClass().getSimpleName + ".readObject used")
     ois.defaultReadObject()
-    generatedRDDs = new HashMap[Time, RDD[T]] ()
+    generatedRDDs = new HashMap[Time, RDD[T]]()
+    cacheIds = new HashMap[Time, Long]()
   }
 
   // =======================================================================
@@ -490,7 +502,7 @@ abstract class DStream[T: ClassManifest] (
    */
   def print() {
     def foreachFunc = (rdd: RDD[T], time: Time) => {
-      val first11 = rdd.take(11)
+      val first11 = rdd.collect() //rdd.take(11)  // TODO: temporary hack for FT tests
       println ("-------------------------------------------")
       println ("Time: " + time)
       println ("-------------------------------------------")
