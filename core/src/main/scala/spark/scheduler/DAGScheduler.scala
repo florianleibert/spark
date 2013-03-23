@@ -66,9 +66,11 @@ class DAGScheduler(
 
   private val eventQueue = new LinkedBlockingQueue[DAGSchedulerEvent]
 
-  val nextRunId = new AtomicInteger(0)
+  private val startId = (((System.currentTimeMillis % 1000000) / 1000) * 100000).toInt
 
-  val nextStageId = new AtomicInteger(0)
+  val nextRunId = new AtomicInteger(startId)
+
+  val nextStageId = new AtomicInteger(startId)
 
   val idToStage = new TimeStampedHashMap[Int, Stage]
 

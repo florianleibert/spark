@@ -37,8 +37,10 @@ private[spark] class ClusterScheduler(val sc: SparkContext)
   var hasLaunchedTask = false
   val starvationTimer = new Timer(true)
 
+  private val startId = (((System.currentTimeMillis % 1000000) / 1000) * 100000).toInt
+
   // Incrementing Mesos task IDs
-  val nextTaskId = new AtomicLong(0)
+  val nextTaskId = new AtomicLong(startId)
 
   // Which executor IDs we have executors on
   val activeExecutorIds = new HashSet[String]
