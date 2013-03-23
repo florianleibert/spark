@@ -44,7 +44,8 @@ class BroadcastManager(val _isDriver: Boolean) extends Logging with Serializable
     broadcastFactory.stop()
   }
 
-  private val nextBroadcastId = new AtomicLong(0)
+  private val startId = ((System.currentTimeMillis % 1000000) / 1000) * 100000
+  private val nextBroadcastId = new AtomicLong(startId)
 
   def newBroadcast[T](value_ : T, isLocal: Boolean) =
     broadcastFactory.newBroadcast[T](value_, isLocal, nextBroadcastId.getAndIncrement())
