@@ -471,7 +471,7 @@ class StreamingContext private (
       networkInputTracker.start()
     }
 
-    Thread.sleep(1000)
+    Thread.sleep(2000)
 
     // Start the scheduler
     scheduler = new Scheduler(this)
