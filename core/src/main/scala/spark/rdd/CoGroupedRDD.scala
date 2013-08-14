@@ -18,9 +18,7 @@
 package spark.rdd
 
 import java.io.{ObjectOutputStream, IOException}
-import java.util.{HashMap => JHashMap}
 
-import scala.collection.JavaConversions
 import scala.collection.mutable.ArrayBuffer
 
 import spark.{Aggregator, Partition, Partitioner, RDD, SparkEnv, TaskContext}
