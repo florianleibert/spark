@@ -67,7 +67,7 @@ object SparkBuild extends Build {
     organization := "org.spark-project",
     version := "0.8.0-SNAPSHOT",
     scalaVersion := "2.9.3",
-    scalacOptions := Seq("-unchecked", "-optimize", "-deprecation"),
+    scalacOptions := Seq("-unchecked", "-deprecation"),
     unmanagedJars in Compile <<= baseDirectory map { base => (base / "lib" ** "*.jar").classpath },
     retrieveManaged := true,
     retrievePattern := "[type]s/[artifact](-[revision])(-[classifier]).[ext]",
