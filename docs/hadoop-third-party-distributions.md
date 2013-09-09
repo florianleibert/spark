@@ -115,4 +115,4 @@ There are a few ways to make these files visible to Spark:
 classpath automatically.
 * If you are running Spark on the same nodes as Hadoop _and_ your distribution includes both
 `hdfs-site.xml` and `core-site.xml` in the same directory, you can set `HADOOP_CONF_DIR` 
-in `$SPARK_HOME/spark-env.sh` to that directory.
+in `$SPARK_HOME/conf/spark-env.sh` to that directory.
