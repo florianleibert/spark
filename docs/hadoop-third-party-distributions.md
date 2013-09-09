@@ -19,6 +19,14 @@ some Hadoop releases are binary compatible across client versions. This means th
 distribution may "just work" without you needing to compile. That said, we recommend compiling with 
 the _exact_ Hadoop version you are running to avoid any compatibility errors.
 
+Note: When running CDH 4.2.X, the following section should be added to the distributions `core-site.xml`.
+
+    <property>
+      <name>fs.hdfs.impl</name>
+      <value>org.apache.hadoop.hdfs.DistributedFileSystem</value>
+      <description>The FileSystem for hdfs: uris.</description>
+    </property>
+
 <table>
   <tr valign="top">
     <td>
